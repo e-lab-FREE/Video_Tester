@@ -3,8 +3,9 @@ import requests
 from pprint import pprint
 plugin_id = 0
 session_id = 0
-#server = "elab1.ist.utl.pt"
-serverl = "localhost"
+server = "146.193.41.143"
+#server = "localhost"
+
 def connect_janus_stream(apisecret):
     
     data = {
@@ -14,7 +15,7 @@ def connect_janus_stream(apisecret):
     }
     print(f'http://{server}:8088/janus/')
     response = requests.post(f'http://{server}:8088/janus/', json = data)
-    #print(response)
+    print(response)
 
     json_ret = response.json()
 
@@ -34,7 +35,7 @@ def connect_janus_stream(apisecret):
     "janus" : "attach",
     "plugin" : "janus.plugin.streaming",
     "transaction": "transaction-x",
-    "apisecret": "janusrocks"
+    "apisecret": str(apisecret)
     }
 
     response = requests.post(f'http://{server}:8088/janus/'+str(session_id), json = data)
@@ -80,7 +81,7 @@ def list_streams(apisecret):
 
 
 def stream_info(apisecret, stream_id):
-    plugin_id, session_id = connect_janus_stream()
+    plugin_id, session_id = connect_janus_stream(apisecret)
     ret_list = []
     #print(session_id)
     #print(plugin_id)
@@ -97,7 +98,7 @@ def stream_info(apisecret, stream_id):
             "transaction": "transaction-x",
             "apisecret": apisecret
         }
-    #print(f'http://localhost:8088/janus/{session_id}/{plugin_id}'    )
+    print(f'http://localhost:8088/janus/{session_id}/{plugin_id}'    )
     response = requests.post(f'http://{server}:8088/janus/{session_id}/{plugin_id}', json = data)
     json_ret = response.json()
     try: 
@@ -108,8 +109,8 @@ def stream_info(apisecret, stream_id):
 
 
 
-def create_stream(name, description, port, apisecret):
-    plugin_id, session_id = connect_janus_stream()
+def create_stream(name, description, port, apisecret,stream_admin_key):
+    plugin_id, session_id = connect_janus_stream(apisecret)
 
     if session_id ==0 or plugin_id == 0:
         return {}
@@ -132,14 +133,16 @@ def create_stream(name, description, port, apisecret):
                 "video" : True,
                 #"data" : <true|false, whether the mountpoint will have datachannels; false by default>,
                 "permanent" : True,
-                "videoport" : int(port),  #Porto onde são recebidos os pacotes do stream (ver comando de gstreamer) 
+                "videoport" : 0,  #Porto onde são recebidos os pacotes do stream (ver comando de gstreamer) 
+#                "videoport" : int(port),  #Porto onde são recebidos os pacotes do stream (ver comando de gstreamer) 
                 "videopt" : 126,  #nao alterar 
                 "videortpmap" : "H264/90000",  #nao alterar 
-                "videofmtp" : "profile-level-id=42e01f;packetization-mode=1" #nao alterar 
+                "videofmtp" : "profile-level-id=42e01f;packetization-mode=1", #nao alterar 
+                "admin_key": stream_admin_key
             
         },
         "transaction": "transaction-x",
-        "apisecret": apisecret
+        "apisecret": apisecret,
     }
 
     #print(f'http://localhost:8088/janus/{session_id}/{plugin_id}')
@@ -157,17 +160,18 @@ def create_stream(name, description, port, apisecret):
 
 if __name__ == "__main__":
     #secret = input('Janus Secret ')
-    secret = "janusrocks"
+    stream_admin_key = str(input("Streaming admin key: "))
+    apisecret = "janurocks"
     while True:
         print("L - List Streams\nN - New Strem\nD - Delete Stream\nI - Stream Info")
         option = input('L I N D :')
         if option == 'L':
-            pprint(list_streams(secret))
+            pprint(list_streams(apisecret))
         if option == 'I':
             stream_id = input("Stream ID :")
-            pprint(stream_info(secret, stream_id))
+            pprint(stream_info(apisecret, stream_id))
         if option == 'N':
             s_name = input("Stream name :")
             s_description = input("Stream description :")
-            s_port = input("Stream port :")
-            pprint(create_stream(s_name, s_description, s_port, "janusrocks"))
+            #s_port = input("Stream port :")
+            pprint(create_stream(s_name, s_description, 0, apisecret, stream_admin_key))
