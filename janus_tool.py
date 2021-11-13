@@ -3,8 +3,8 @@ import requests
 from pprint import pprint
 plugin_id = 0
 session_id = 0
-server = "146.193.41.143"
-#server = "localhost"
+#server = "146.193.41.143"
+server = "localhost"
 
 def connect_janus_stream(apisecret):
     
